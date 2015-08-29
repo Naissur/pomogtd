@@ -5,6 +5,7 @@
   "main": "index.js",
   "dependencies": {},
   "devDependencies": {
+    "livereload": "^0.3.7",
     "onchange": "^2.0.0"
   },
   "scripts": {
@@ -17,7 +18,7 @@
     "watch": "npm run elm:watch & npm run html:watch & npm run css:watch ",
     "prebuild": "mkdir -p dist/styles dist/scripts",
     "build": "npm run elm && npm run html && npm run css",
-    "livereload": "live-reload --port 9091 dist/ ",
+    "livereload": "livereload dist/ ",
     "preserver": "npm run build",
     "server": "cd dist/ && python -m SimpleHTTPServer 8000 dist/",
     "devserver": "npm run watch & npm run server & npm run livereload"
