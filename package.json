@@ -16,7 +16,7 @@
     "html": "cp src/app/index.html dist/index.html",
     "html:watch": "onchange 'src/**/*.html' -- npm run html",
     "css": "./node_modules/node-sass/bin/node-sass src/app/styles.scss dist/styles.css",
-    "css:watch": "./node_modules/node-sass/bin/node-sass -w src/app/styles.scss -o dist/",
+    "css:watch": "./node_modules/node-sass/bin/node-sass -w -r src/app/styles.scss -o dist/",
     "watch": "npm run elm:watch & npm run html:watch & npm run css:watch ",
     "prebuild": "mkdir -p dist/styles dist/scripts",
     "build": "npm run elm && npm run html && npm run css",
