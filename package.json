@@ -6,15 +6,17 @@
   "dependencies": {},
   "devDependencies": {
     "livereload": "^0.3.7",
-    "onchange": "^2.0.0"
+    "node-sass": "^3.3.2",
+    "onchange": "^2.0.0",
+    "sass": "^0.5.0"
   },
   "scripts": {
     "elm": "elm-make src/app/main.elm --output dist/scripts/elm.js",
     "elm:watch": "onchange 'src/**/*.elm' -- npm run elm",
     "html": "cp src/app/index.html dist/index.html",
     "html:watch": "onchange 'src/**/*.html' -- npm run html",
-    "css": "cp src/app/styles.css dist/styles/styles.css",
-    "css:watch": "onchange 'src/**/*.css' -- npm run css",
+    "css": "./node_modules/node-sass/bin/node-sass src/app/styles.scss dist/styles.css",
+    "css:watch": "./node_modules/node-sass/bin/node-sass -w src/app/styles.scss -o dist/",
     "watch": "npm run elm:watch & npm run html:watch & npm run css:watch ",
     "prebuild": "mkdir -p dist/styles dist/scripts",
     "build": "npm run elm && npm run html && npm run css",

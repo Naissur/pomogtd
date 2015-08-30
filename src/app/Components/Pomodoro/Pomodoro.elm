@@ -24,12 +24,12 @@ type alias Model = {
 
 
 workTime: Time.Time
---workTime = Time.minute * 25
-workTime = Time.second * 7
+workTime = Time.minute * 25
+--workTime = Time.second * 7
 
 smallBreakTime: Time.Time
---smallBreakTime  = Time.minute * 5
-smallBreakTime  = Time.second * 4
+smallBreakTime  = Time.minute * 5
+--smallBreakTime  = Time.second * 4
 
 largeBreakTime: Time.Time
 --largeBreakTime  = Time.minute * 15
@@ -134,7 +134,7 @@ controlsView address model =
                 onClick address Start, 
                 class "pomodoro__controls__start"
             ][
-                text "start"
+                text "Start"
             ]
         else div [] []
         ,
@@ -154,7 +154,7 @@ controlsView address model =
                 onClick address Stop,
                 class "pomodoro__controls__stop"
             ][
-                text "stop"
+                text "Stop"
             ]
         else div [] []
     ]
