@@ -25,11 +25,11 @@ type alias Model = {
 
 workTime: Time.Time
 workTime = Time.minute * 25
---workTime = Time.second * 7
+--workTime = Time.second * 2
 
 smallBreakTime: Time.Time
 smallBreakTime  = Time.minute * 5
---smallBreakTime  = Time.second * 4
+--smallBreakTime  = Time.second * 2
 
 largeBreakTime: Time.Time
 --largeBreakTime  = Time.minute * 15
@@ -144,12 +144,14 @@ controlsView address model =
                 onClick address Continue,
                 class "pomodoro__controls__resume"
             ][
-                text "Continue"
+                case model.phase of
+                    Working -> text "Start working"
+                    SmallBreak -> text "Start break"
             ]
         else div [] []
         ,
 
-        if model.started then
+        if (model.started && (not model.paused) )  then
             button [ 
                 onClick address Stop,
                 class "pomodoro__controls__stop"
@@ -164,8 +166,6 @@ view : Signal.Address Action -> Model -> Html.Html
 view address model = 
     div [] [
         div [ class "pomodoro" ] [
-            text "Pomodoro!",
-
             timeLeftView address model,
             controlsView address model
         ]

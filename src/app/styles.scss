@@ -1,16 +1,32 @@
 @import "Components/Pomodoro/Pomodoro.scss";
 @import "Common/common.scss";
 
+.wrapper{
+    max-width: 1200px;
+    padding: 0px 20px;
+    margin: auto;
+}
 
 .header{
+    padding: 20px 0px;
+
+    .header__logo{
+        display: block;
+        width: 220px;
+        height: 70px;
+        padding-right: 5px;
+
+        @media screen and (max-width: $break_small){
+            margin: auto;
+        }
+    }
 }
 
 .main{
-    width: 200px;
+    width: 240px;
     margin: auto;
-    padding: 20px 10px;
 
     text-align: center;
 
-    border: 1px solid #000;
+    //border: 1px solid #000;
 }

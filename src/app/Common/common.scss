@@ -1,3 +1,6 @@
+$break_small: 480px;
+
+
 *{
 	font-family: 'Open Sans', sans-serif;
 	box-sizing: border-box;
@@ -12,21 +15,24 @@ body{
     color: white;
 }
 
+$color_main: #6ca141;
+
 button{
-	background-color: #859CD5;
+	background-color: $color_main;
 	color: white;
 	border: 0;
-	padding: 8px 18px;
+	padding: 8px 26px;
+    padding-bottom: 9px;
 
 	cursor: pointer;
 	overflow: hidden;
 
-	font-size: 16px;
+	font-size: 20px;
 	font-weight: 500;
 }
 
 button:focus{ outline: none; }
-button:hover{ background-color: #9B70DF; }
-button:active{ background-color: #8559CD; }
+button:hover{ background-color: lighten($color_main, 5%); }
+button:active{ background-color: darken($color_main, 5%); }
 
 

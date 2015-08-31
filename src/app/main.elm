@@ -1,5 +1,5 @@
-import Html exposing (Html, p, h3, div, button, text)
-import Html.Attributes exposing (class, classList)
+import Html exposing (Html, img, p, h3, div, button, text)
+import Html.Attributes exposing (src, class, classList)
 import Signal exposing (..)
 import Time exposing (fps)
 
@@ -35,9 +35,9 @@ update action model =
 
 view : Signal.Address Action -> PomoGTDModel -> Html.Html
 view address model = 
-    div [] [
+    div [ class "wrapper" ] [
         div [ class "header" ] [
-            text "HEADER"
+            img [ src "/images/logo.svg", class "header__logo" ] [ ]
         ],
 
         div [ class "main" ] [
@@ -52,9 +52,16 @@ view address model =
 main : Signal Html
 main = view actions.address <~ model
 
+
+pausedPort: Signal Bool
+pausedPort = Signal.dropRepeats <| (.paused << .pomodoroModel) <~ model
+
+port soundPort : Signal String
+port soundPort = (\paused -> if paused then "ring" else "") <~ pausedPort
+
 updatePomodoroTimeSignal : Signal Action
 updatePomodoroTimeSignal = 
-              (\dt -> PomodoroAction (Pomodoro.UpdateTime dt) ) <~ (fps 6)
+              (\dt -> PomodoroAction (Pomodoro.UpdateTime dt) ) <~ (fps 5)
 
 actions : Signal.Mailbox Action
 actions =

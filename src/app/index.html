@@ -3,12 +3,39 @@
 		<title> Stopwatch </title>
 		<link rel="stylesheet" href="/styles.css">
 		<link href='http://fonts.googleapis.com/css?family=Open+Sans:400,300,600' rel='stylesheet' type='text/css'>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="mobile-web-app-capable" content="yes">
 	</head>
 	<body>
-	</body>
+        <button id="loadSounds">Load sounds!</button>
 
-	<script type="text/javascript" src="scripts/elm.js"></script>
-	<script type="text/javascript">
-		Elm.fullscreen(Elm.Main);
-	</script>
-</html
+        <script type="text/javascript" src="scripts/elm.js"></script>
+        <script type="text/javascript">
+            var app = Elm.fullscreen(Elm.Main);
+
+
+            app.ports.soundPort.subscribe(soundPortCallback);
+            function soundPortCallback(soundId) {
+                switch(soundId){
+                    case "ring": playSound("ring");
+                        break;
+                }
+            }
+
+            function playSound(soundId){
+                document.getElementById(soundId).play();
+            }
+
+            function loadSound(soundId){
+                document.getElementById(soundId).load();
+            }
+
+            document.getElementById("loadSounds").addEventListener("click", function(){
+                                                                                loadSound("ring");
+                                                                            });
+        </script>
+
+
+        <audio id="ring" type="audio/mpeg" src="/sounds/ring.mp3" preload="auto"></audio>
+	</body>
+</html>
