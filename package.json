@@ -24,7 +24,7 @@
     "build": "npm run elm && npm run html && npm run css && npm run assets",
     "livereload": "livereload dist/ ",
     "preserver": "npm run build",
-    "server": "./node_modules/http-server/bin/http-server dist/ -p 8000",
+    "server": "./node_modules/http-server/bin/http-server dist/ -p 8080",
     "devserver": "npm run watch & npm run server & npm run livereload"
   },
   "author": "Naissur",

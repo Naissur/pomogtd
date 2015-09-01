@@ -5,8 +5,7 @@ import Time exposing (fps)
 
 
 import Components.Pomodoro.Pomodoro as Pomodoro
-
-
+import Components.GTD.GTD as GTD
 
 
 -- MODEL
@@ -16,24 +15,34 @@ type alias PomoGTDModel = {
     pomodoroModel : Pomodoro.Model
 }
 
+initialModel : PomoGTDModel
+initialModel = {
+        pomodoroModel = Pomodoro.initialModel
+    }
+
+
 
 -- UPDATES
 type Action = NoOp
              |PomodoroAction Pomodoro.Action
 
+type IncomingAction = NoOpIncoming
+                     |PomodoroIncomingAction Pomodoro.OutgoingAction
+
 update: Action -> PomoGTDModel -> PomoGTDModel 
 update action model = 
     case action of
         NoOp -> model
-        (PomodoroAction pomoAction) -> { model |
-                                            pomodoroModel <- (Pomodoro.update pomoAction model.pomodoroModel)
-                                       }
+        (PomodoroAction pomoAction) -> 
+                    { model |
+                        pomodoroModel <- (Pomodoro.update pomoAction model.pomodoroModel)
+                    }
 
 
 
 -- VIEW
 
-view : Signal.Address Action -> PomoGTDModel -> Html.Html
+view : Signal.Address IncomingAction -> PomoGTDModel -> Html.Html
 view address model = 
     div [ class "wrapper" ] [
         div [ class "header" ] [
@@ -41,16 +50,18 @@ view address model =
         ],
 
         div [ class "main" ] [
-            Pomodoro.view (Signal.forwardTo address PomodoroAction ) model.pomodoroModel
+            Pomodoro.view (Signal.forwardTo address PomodoroIncomingAction ) model.pomodoroModel
         ]
     ]
+
+
 
 
 
 -- WIRING UP
 
 main : Signal Html
-main = view actions.address <~ model
+main = view incomingActions.address <~ model
 
 
 pausedPort: Signal Bool
@@ -59,25 +70,32 @@ pausedPort = Signal.dropRepeats <| (.paused << .pomodoroModel) <~ model
 port soundPort : Signal String
 port soundPort = (\paused -> if paused then "ring" else "") <~ pausedPort
 
+
+
+
+
+incomingActions : Signal.Mailbox IncomingAction
+incomingActions = Signal.mailbox NoOpIncoming
+
+handleIncomingAction : (Time.Time, IncomingAction) -> Action
+handleIncomingAction (now, action) = 
+        case action of
+            NoOpIncoming -> NoOp
+            (PomodoroIncomingAction (Pomodoro.RequestStart)) ->      (PomodoroAction ((Pomodoro.Start)    now))
+            (PomodoroIncomingAction (Pomodoro.RequestContinue)) ->   (PomodoroAction ((Pomodoro.Continue) now))
+            (PomodoroIncomingAction (Pomodoro.RequestStop)) ->       (PomodoroAction ((Pomodoro.Stop) now))
+
+
 updatePomodoroTimeSignal : Signal Action
 updatePomodoroTimeSignal = 
-              (\dt -> PomodoroAction (Pomodoro.UpdateTime dt) ) <~ (fps 5)
+              (\now -> (PomodoroAction (Pomodoro.UpdateTime now)) ) <~ (Time.every Time.second)
 
-actions : Signal.Mailbox Action
-actions =
-    Signal.mailbox NoOp
 
+modelUpdatesSignal : Signal Action
+modelUpdatesSignal = Signal.merge (handleIncomingAction <~ (Time.timestamp incomingActions.signal) ) updatePomodoroTimeSignal 
 
 model : Signal PomoGTDModel
-model =
-    Signal.foldp update initialModel (Signal.merge actions.signal updatePomodoroTimeSignal )
-
-
-initialModel : PomoGTDModel
-initialModel = {
-        pomodoroModel = Pomodoro.initialModel
-    }
-
+model = Signal.foldp update initialModel modelUpdatesSignal
 
 
 

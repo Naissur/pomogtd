@@ -7,13 +7,21 @@
         <meta name="mobile-web-app-capable" content="yes">
 	</head>
 	<body>
-        <button id="loadSounds">Load sounds!</button>
-
         <script type="text/javascript" src="scripts/elm.js"></script>
+
         <script type="text/javascript">
             var app = Elm.fullscreen(Elm.Main);
 
 
+            //LOGGING
+            /*
+            app.ports.pomodoroLoggerPort.subscribe(loggerPortCallback);
+            function loggerPortCallback(log){
+                console.log(log);
+            }
+            */
+
+            //SOUNDS
             app.ports.soundPort.subscribe(soundPortCallback);
             function soundPortCallback(soundId) {
                 switch(soundId){
@@ -30,9 +38,6 @@
                 document.getElementById(soundId).load();
             }
 
-            document.getElementById("loadSounds").addEventListener("click", function(){
-                                                                                loadSound("ring");
-                                                                            });
         </script>
 
 

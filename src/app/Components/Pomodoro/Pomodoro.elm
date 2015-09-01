@@ -8,6 +8,8 @@ import Time exposing (..)
 
 import Common.TimeUtils as TimeUtils
 
+import Components.Pomodoro.PomodoroLog as PomodoroLog
+
 
 
 -- MODEL
@@ -19,17 +21,34 @@ type alias Model = {
     started: Bool,
     paused: Bool,
     phase: Phase,
-    timeLeft: Time.Time
+    timeStarted: Time.Time,
+    timeEnding: Time.Time,
+    timeLeft: Time.Time,
+
+    log: PomodoroLog.Log
 }
+
+initialModel : Model
+initialModel = {
+        started = False,
+        paused = False,
+        phase = Working,
+        timeStarted = 0,
+        timeEnding = 0,
+        timeLeft = workTime,
+
+        log = PomodoroLog.initialLog
+    }
+
 
 
 workTime: Time.Time
-workTime = Time.minute * 25
---workTime = Time.second * 2
+--workTime = Time.minute * 25
+workTime = Time.second * 3
 
 smallBreakTime: Time.Time
-smallBreakTime  = Time.minute * 5
---smallBreakTime  = Time.second * 2
+--smallBreakTime  = Time.minute * 5
+smallBreakTime  = Time.second * 4
 
 largeBreakTime: Time.Time
 --largeBreakTime  = Time.minute * 15
@@ -42,80 +61,109 @@ getPhaseTime phase =
             Working -> workTime
             SmallBreak -> smallBreakTime
 
+
 getNextPhase: Phase -> Phase
 getNextPhase phase = 
         if  | phase == Working -> SmallBreak
             | phase == SmallBreak -> Working
 
 
-initialModel : Model
-initialModel = {
-        started = False,
-        paused = False,
-        phase = Working,
-        timeLeft = workTime
-    }
-
 
 -- UPDATES
 
 type Action = NoOp
              |UpdateTime Time.Time
-             |Start
-             |Continue
-             |Stop
+             |Start Time.Time
+             |Continue Time.Time
+             |Stop Time.Time
+
+-- Actions outgoing from the component, similiar to requests for actions
+type OutgoingAction  = RequestStart
+                      |RequestContinue
+                      |RequestStop
 
 update : Action -> Model -> Model
 update action model = 
     case action of
         NoOp -> model
 
-        UpdateTime dt -> 
-            if  | (model.started) && (not model.paused) && (model.timeLeft > 0)  ->
+        -- Update timeLeft based on current time
+        UpdateTime now -> 
+
+            if  | (model.started) && (not model.paused) && (model.timeEnding > now)  ->
                     { model |
-                        timeLeft <- (model.timeLeft - dt)
+                        timeLeft <- (model.timeLeft - Time.second)
                     }
 
 
                 -- switch phases
-                | (model.started) && (not model.paused) && (model.timeLeft <= 0) ->
+                | (model.started) && (not model.paused) && (model.timeEnding <= now) ->
                     let
+                        pomodoroLog = {
+                            timeStarted = model.timeStarted,
+                            timeFinished = model.timeEnding,
+                            finished = True
+                        }
                         nextPhase = getNextPhase model.phase
                     in
                         { model |
                             paused <- True,
                             phase <- nextPhase,
-                            timeLeft <- (getPhaseTime nextPhase)
+                            timeLeft <- (getPhaseTime nextPhase),
+
+                            log <- PomodoroLog.update ( (PomodoroLog.AppendPomodoroLog) pomodoroLog ) model.log
                         }
 
                 | otherwise -> model
                     
 
-        Start -> 
+        Start now -> 
                 { model |
                     paused <- False,
                     started <- True,
-                    timeLeft <- workTime
+                    timeLeft <- workTime,
+                    timeStarted <- now,
+                    timeEnding <- (now + workTime)
                 }
 
-        Continue ->
-                { model | 
-                    paused <- False
-                }
+        Continue now ->
+                let
+                    phaseTime = getPhaseTime model.phase
+                in
+                    { model | 
+                        paused <- False,
+                        timeLeft <- phaseTime,
+                        timeStarted <- now,
+                        timeEnding <- (now + phaseTime)
+                    }
             
 
-        Stop -> 
-            { model | 
-                paused <- False,
-                started <- False,
-                timeLeft <- workTime
-            }
+        Stop now -> 
+            let
+                pomodoroLog = {
+                    timeStarted = model.timeStarted,
+                    timeFinished = now,
+                    finished = False
+                }
+            in
+                { model | 
+                    paused <- False,
+                    started <- False,
+                    timeLeft <- workTime,
+                    timeEnding <- workTime,
+
+                    log <- PomodoroLog.update ( (PomodoroLog.AppendPomodoroLog) pomodoroLog ) model.log
+                }
+
+
+
+
 
 
 -- VIEW
 
 
-timeLeftView : Signal.Address Action -> Model -> Html.Html
+timeLeftView : Signal.Address OutgoingAction -> Model -> Html.Html
 timeLeftView address model = 
     div [ 
         class "pomodoro__timeLeft" 
@@ -126,12 +174,12 @@ timeLeftView address model =
     ]
 
 
-controlsView : Signal.Address Action -> Model -> Html.Html
+controlsView : Signal.Address OutgoingAction -> Model -> Html.Html
 controlsView address model = 
     div [ class "pomodoro__controls"] [
         if not model.started then
             button [    
-                onClick address Start, 
+                onClick address RequestStart, 
                 class "pomodoro__controls__start"
             ][
                 text "Start"
@@ -141,7 +189,7 @@ controlsView address model =
 
         if model.paused then
             button [ 
-                onClick address Continue,
+                onClick address RequestContinue,
                 class "pomodoro__controls__resume"
             ][
                 case model.phase of
@@ -153,7 +201,7 @@ controlsView address model =
 
         if (model.started && (not model.paused) )  then
             button [ 
-                onClick address Stop,
+                onClick address RequestStop,
                 class "pomodoro__controls__stop"
             ][
                 text "Stop"
@@ -162,7 +210,7 @@ controlsView address model =
     ]
 
 
-view : Signal.Address Action -> Model -> Html.Html 
+view : Signal.Address OutgoingAction -> Model -> Html.Html 
 view address model = 
     div [] [
         div [ class "pomodoro" ] [
