@@ -1,0 +1,74 @@
+.gtd{
+
+    .gtd__newTask{
+        
+        .gtd__newTask__input{
+            background: none;
+            border: none;
+
+            width: 100%;
+            padding: 4px 13px;
+
+
+            border-bottom: 1px solid #333;
+
+            font-size: 16px;
+            color: #eee;
+
+            &:focus{
+                outline: none;
+            }
+        }
+
+    }
+
+    .gtd__tasksPoolView{
+        padding: 9px 0px;
+        
+    }
+}
+
+
+.gtd__task{
+    padding: 6px 14px;
+    text-align: left;
+
+    position: relative;
+
+    color: #999;
+
+    transition: all 0.2s;
+
+    &:hover{
+        background: rgba(#000, 0.3);
+        color: #fff;
+
+        .gtd__task__remove{
+            opacity: 1;
+        }
+    }
+
+    .gtd__task__remove{
+        opacity: 0;
+
+        position: absolute;
+        right: 5px;
+        top: 5px;
+
+        width: 24px;
+        height: 24px;
+        text-align: center;
+
+        cursor: pointer;
+
+        transition: all 0.2s;
+
+        &:hover{
+            background: rgba(#000, 0.3);
+            color: #fff;
+        }
+    }
+}
+
+
+

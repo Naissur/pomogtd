@@ -43,12 +43,12 @@ initialModel = {
 
 
 workTime: Time.Time
---workTime = Time.minute * 25
-workTime = Time.second * 3
+workTime = Time.minute * 25
+--workTime = Time.second * 3
 
 smallBreakTime: Time.Time
---smallBreakTime  = Time.minute * 5
-smallBreakTime  = Time.second * 4
+smallBreakTime  = Time.minute * 5
+--smallBreakTime  = Time.second * 4
 
 largeBreakTime: Time.Time
 --largeBreakTime  = Time.minute * 15
@@ -72,23 +72,23 @@ getNextPhase phase =
 -- UPDATES
 
 type Action = NoOp
-             |UpdateTime Time.Time
-             |Start Time.Time
-             |Continue Time.Time
-             |Stop Time.Time
+             |UpdateTime
+             |Start
+             |Continue
+             |Stop
 
 -- Actions outgoing from the component, similiar to requests for actions
 type OutgoingAction  = RequestStart
                       |RequestContinue
                       |RequestStop
 
-update : Action -> Model -> Model
-update action model = 
+update : (Time.Time, Action) -> Model -> Model
+update (now, action) model = 
     case action of
         NoOp -> model
 
         -- Update timeLeft based on current time
-        UpdateTime now -> 
+        UpdateTime -> 
 
             if  | (model.started) && (not model.paused) && (model.timeEnding > now)  ->
                     { model |
@@ -117,7 +117,7 @@ update action model =
                 | otherwise -> model
                     
 
-        Start now -> 
+        Start -> 
                 { model |
                     paused <- False,
                     started <- True,
@@ -126,7 +126,7 @@ update action model =
                     timeEnding <- (now + workTime)
                 }
 
-        Continue now ->
+        Continue ->
                 let
                     phaseTime = getPhaseTime model.phase
                 in
@@ -138,7 +138,7 @@ update action model =
                     }
             
 
-        Stop now -> 
+        Stop -> 
             let
                 pomodoroLog = {
                     timeStarted = model.timeStarted,
@@ -218,3 +218,5 @@ view address model =
             controlsView address model
         ]
     ]
+
+

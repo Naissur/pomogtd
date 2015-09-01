@@ -12,12 +12,14 @@ import Components.GTD.GTD as GTD
 
 
 type alias PomoGTDModel = {
-    pomodoroModel : Pomodoro.Model
+    pomodoroModel : Pomodoro.Model,
+    gtdModel : GTD.Model
 }
 
 initialModel : PomoGTDModel
 initialModel = {
-        pomodoroModel = Pomodoro.initialModel
+        pomodoroModel = Pomodoro.initialModel,
+        gtdModel = GTD.initialModel
     }
 
 
@@ -25,17 +27,23 @@ initialModel = {
 -- UPDATES
 type Action = NoOp
              |PomodoroAction Pomodoro.Action
+             |GTDAction GTD.Action
 
 type IncomingAction = NoOpIncoming
                      |PomodoroIncomingAction Pomodoro.OutgoingAction
+                     |GTDIncomingAction GTD.OutgoingAction
 
-update: Action -> PomoGTDModel -> PomoGTDModel 
-update action model = 
+update: (Time.Time, Action) -> PomoGTDModel -> PomoGTDModel 
+update (now, action) model = 
     case action of
         NoOp -> model
+        (GTDAction gtdAction) -> 
+                    { model |
+                        gtdModel <- (GTD.update gtdAction model.gtdModel)
+                    }
         (PomodoroAction pomoAction) -> 
                     { model |
-                        pomodoroModel <- (Pomodoro.update pomoAction model.pomodoroModel)
+                        pomodoroModel <- (Pomodoro.update (now, pomoAction) model.pomodoroModel)
                     }
 
 
@@ -50,7 +58,8 @@ view address model =
         ],
 
         div [ class "main" ] [
-            Pomodoro.view (Signal.forwardTo address PomodoroIncomingAction ) model.pomodoroModel
+            Pomodoro.view (Signal.forwardTo address PomodoroIncomingAction ) model.pomodoroModel,
+            GTD.view (Signal.forwardTo address GTDIncomingAction ) model.gtdModel
         ]
     ]
 
@@ -77,22 +86,28 @@ port soundPort = (\paused -> if paused then "ring" else "") <~ pausedPort
 incomingActions : Signal.Mailbox IncomingAction
 incomingActions = Signal.mailbox NoOpIncoming
 
-handleIncomingAction : (Time.Time, IncomingAction) -> Action
-handleIncomingAction (now, action) = 
+handleIncomingAction : IncomingAction -> Action
+handleIncomingAction action = 
         case action of
             NoOpIncoming -> NoOp
-            (PomodoroIncomingAction (Pomodoro.RequestStart)) ->      (PomodoroAction ((Pomodoro.Start)    now))
-            (PomodoroIncomingAction (Pomodoro.RequestContinue)) ->   (PomodoroAction ((Pomodoro.Continue) now))
-            (PomodoroIncomingAction (Pomodoro.RequestStop)) ->       (PomodoroAction ((Pomodoro.Stop) now))
+
+            (PomodoroIncomingAction (Pomodoro.RequestStart)) ->      (PomodoroAction (Pomodoro.Start))
+            (PomodoroIncomingAction (Pomodoro.RequestContinue)) ->   (PomodoroAction (Pomodoro.Continue))
+            (PomodoroIncomingAction (Pomodoro.RequestStop)) ->       (PomodoroAction (Pomodoro.Stop))
+
+            (GTDIncomingAction (GTD.RequestAppendTask desc) ) ->               (GTDAction (GTD.AppendTask desc) )
+            (GTDIncomingAction (GTD.RequestRemoveTask id) ) ->                 (GTDAction (GTD.RemoveTask id) )
+            (GTDIncomingAction (GTD.RequestUpdateNewTaskDescription desc) ) -> (GTDAction (GTD.UpdateNewTaskDescription desc) )
 
 
-updatePomodoroTimeSignal : Signal Action
+updatePomodoroTimeSignal : Signal (Time.Time, Action)
 updatePomodoroTimeSignal = 
-              (\now -> (PomodoroAction (Pomodoro.UpdateTime now)) ) <~ (Time.every Time.second)
+              (\now -> (now, PomodoroAction (Pomodoro.UpdateTime)) ) <~ (Time.every Time.second)
 
 
-modelUpdatesSignal : Signal Action
-modelUpdatesSignal = Signal.merge (handleIncomingAction <~ (Time.timestamp incomingActions.signal) ) updatePomodoroTimeSignal 
+modelUpdatesSignal : Signal (Time.Time, Action)
+modelUpdatesSignal = Signal.merge (Time.timestamp <| handleIncomingAction <~ incomingActions.signal ) updatePomodoroTimeSignal 
+
 
 model : Signal PomoGTDModel
 model = Signal.foldp update initialModel modelUpdatesSignal
