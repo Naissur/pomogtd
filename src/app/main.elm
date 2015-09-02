@@ -2,6 +2,7 @@ import Html exposing (Html, img, p, h3, div, button, text)
 import Html.Attributes exposing (src, class, classList)
 import Signal exposing (..)
 import Time exposing (fps)
+import Maybe exposing (andThen)
 
 
 import Components.Pomodoro.Pomodoro as Pomodoro
@@ -16,12 +17,40 @@ type alias PomoGTDModel = {
     gtdModel : GTD.Model
 }
 
-initialModel : PomoGTDModel
-initialModel = {
+type alias SerealizedPomoGTDModel = {
+    pomodoroModel : Pomodoro.SerealizedModel,
+    gtdModel : GTD.SerealizedModel
+}
+
+
+serealizeModel : PomoGTDModel -> SerealizedPomoGTDModel
+serealizeModel model = 
+        {
+            pomodoroModel = Pomodoro.serealizeModel model.pomodoroModel,
+            gtdModel = GTD.serealizeModel model.gtdModel
+        }
+
+deSerealizeModel : SerealizedPomoGTDModel -> (Maybe PomoGTDModel)
+deSerealizeModel model = 
+                let
+                    pModel = (Pomodoro.deSerealizeModel model.pomodoroModel)
+                    gModel = (GTD.deSerealizeModel model.gtdModel)
+                in
+                    case (pModel, gModel) of
+                        (Just p, Just g) ->
+
+                            Just {
+                                pomodoroModel = p,
+                                gtdModel = g
+                            }
+                        otherwise -> Nothing
+
+
+emptyModel : PomoGTDModel
+emptyModel = {
         pomodoroModel = Pomodoro.initialModel,
         gtdModel = GTD.initialModel
     }
-
 
 
 -- UPDATES
@@ -108,6 +137,12 @@ pausedPort = Signal.dropRepeats <| (.paused << .pomodoroModel) <~ model
 port soundPort : Signal String
 port soundPort = (\paused -> if paused then "ring" else "") <~ pausedPort
 
+port appModelPort : Signal SerealizedPomoGTDModel
+port appModelPort = Signal.dropRepeats <| serealizeModel <~ model
+
+port storedModel : Maybe SerealizedPomoGTDModel
+
+
 
 
 
@@ -132,16 +167,18 @@ handleIncomingAction action =
 
 updatePomodoroTimeSignal : Signal (Time.Time, Action)
 updatePomodoroTimeSignal = 
-              (\now -> (now, PomodoroAction (Pomodoro.UpdateTime)) ) <~ (Time.every Time.second)
+              (\now -> (now, PomodoroAction (Pomodoro.UpdateTime)) ) <~ (Time.every (Time.millisecond*500) )
 
 
 modelUpdatesSignal : Signal (Time.Time, Action)
 modelUpdatesSignal = Signal.merge (Time.timestamp <| handleIncomingAction <~ incomingActions.signal ) updatePomodoroTimeSignal 
 
 
+
+initialModel : PomoGTDModel
+initialModel = Maybe.withDefault emptyModel (storedModel `andThen` deSerealizeModel )
+
 model : Signal PomoGTDModel
 model = Signal.foldp update initialModel modelUpdatesSignal
-
-
 
 

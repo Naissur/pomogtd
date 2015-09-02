@@ -5,6 +5,7 @@ import Html.Attributes exposing (class, classList)
 import Html.Events exposing (onClick)
 import Signal exposing (..)
 import Time exposing (..)
+import Maybe exposing (andThen)
 
 import Common.TimeUtils as TimeUtils
 
@@ -17,6 +18,21 @@ import Components.Pomodoro.PomodoroLog as PomodoroLog
 type Phase = Working
             |SmallBreak
 
+serealizePhase : Phase -> String
+serealizePhase phase = 
+        case phase of
+            Working ->      "Working"
+            SmallBreak ->   "SmallBreak"
+
+
+deserealizePhase : String -> Maybe Phase
+deserealizePhase phase = 
+        case phase of
+            "Working" ->     Just Working
+            "SmallBreak" ->  Just SmallBreak
+            otherwise ->     Nothing
+
+
 type alias Model = {
     started: Bool,
     paused: Bool,
@@ -27,6 +43,48 @@ type alias Model = {
 
     log: PomodoroLog.Log
 }
+
+type alias SerealizedModel = {
+    started: Bool,
+    paused: Bool,
+    phase: String,
+    timeStarted: Time.Time,
+    timeEnding: Time.Time,
+    timeLeft: Time.Time,
+
+    log: PomodoroLog.Log
+}
+
+
+serealizeModel : Model -> SerealizedModel
+serealizeModel model = 
+        {
+            started = model.started,
+            paused = model.paused,
+            phase = (serealizePhase model.phase),
+            timeStarted = model.timeStarted,
+            timeEnding = model.timeEnding,
+            timeLeft = model.timeLeft,
+
+            log = model.log
+        }
+
+deSerealizeModel : SerealizedModel -> Maybe Model
+deSerealizeModel model = 
+        (deserealizePhase model.phase) `andThen` 
+
+        \deserealizedPhase ->
+          Just  {
+                    started = model.started,
+                    paused = model.paused,
+                    phase = deserealizedPhase,
+                    timeStarted = model.timeStarted,
+                    timeLeft = model.timeLeft,
+                    timeEnding = model.timeEnding,
+
+                    log = model.log
+                }
+
 
 initialModel : Model
 initialModel = {
@@ -92,7 +150,7 @@ update (now, action) model =
 
             if  | (model.started) && (not model.paused) && (model.timeEnding > now)  ->
                     { model |
-                        timeLeft <- (model.timeLeft - Time.second)
+                        timeLeft <- (model.timeEnding - now)
                     }
 
 

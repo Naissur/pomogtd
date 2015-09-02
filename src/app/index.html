@@ -10,16 +10,59 @@
         <script type="text/javascript" src="scripts/elm.js"></script>
 
         <script type="text/javascript">
-            var app = Elm.fullscreen(Elm.Main);
 
-
-            //LOGGING
-            /*
-            app.ports.pomodoroLoggerPort.subscribe(loggerPortCallback);
-            function loggerPortCallback(log){
-                console.log(log);
+            // Retrieve the model from storage
+            function saveModel(model){
+                localStorage.setItem('model', JSON.stringify(model));
             }
-            */
+
+            function removeModel(){
+                localStorage.removeItem('model');
+            }
+
+            function retrieveModelFromStorage(){
+                var storedModel;
+                try{
+                    var stringified = localStorage.getItem('model');
+                    storedModel = JSON.parse(stringified);
+                }catch(e){
+                    storedModel = null;
+                }
+
+                return storedModel;
+            }
+
+            function makeWrapperActive(){
+                var wrapper = document.querySelector('.wrapper');
+
+                if(wrapper !== null){
+                    wrapper.classList.add('active');
+                }
+            }
+
+            function runApp(storedModel){
+                var app;
+
+                try{
+                    app = Elm.fullscreen(Elm.Main, { storedModel: storedModel });
+                }
+                catch(e){
+                    removeModel();
+                    app = Elm.fullscreen(Elm.Main, { storedModel: null });
+                }
+
+                return app;
+            }
+
+
+            var app = runApp(retrieveModelFromStorage());
+
+            setTimeout( makeWrapperActive, 0);
+
+            //SAVING STATE
+            app.ports.appModelPort.subscribe(saveModel);
+
+
 
             //SOUNDS
             app.ports.soundPort.subscribe(soundPortCallback);

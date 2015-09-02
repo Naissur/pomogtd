@@ -27,6 +27,19 @@ type alias Model = {
     highlightFirst : Bool
 }
 
+type alias SerealizedModel = {
+    tasks : List Task,
+    newTaskDescription : String,
+    enableNewTaskAdding : Bool,
+    highlightFirst : Bool
+}
+
+serealizeModel : Model -> SerealizedModel
+serealizeModel model = model
+
+deSerealizeModel : SerealizedModel -> Maybe Model
+deSerealizeModel model = Just model
+
 initialModel : Model
 initialModel =  {
                     tasks = [],
