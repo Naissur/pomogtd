@@ -41,7 +41,36 @@ update (now, action) model =
                     { model |
                         gtdModel <- (GTD.update gtdAction model.gtdModel)
                     }
+
         (PomodoroAction pomoAction) -> 
+            case pomoAction of
+                Pomodoro.Start -> 
+                    { model |
+                        pomodoroModel <- (Pomodoro.update (now, pomoAction) model.pomodoroModel),
+                        gtdModel <- ( (GTD.update GTD.EnableFirstHighlighting) << (GTD.update GTD.DisableNewTaskAppending) <| model.gtdModel)
+                    }
+
+                Pomodoro.Continue phase -> 
+                    case phase of
+                        Pomodoro.Working ->
+                            { model |
+                                pomodoroModel <- (Pomodoro.update (now, pomoAction) model.pomodoroModel),
+                                gtdModel <- ( (GTD.update GTD.EnableFirstHighlighting) << (GTD.update GTD.DisableNewTaskAppending) <| model.gtdModel)
+                            }
+
+                        Pomodoro.SmallBreak ->
+                            { model |
+                                pomodoroModel <- (Pomodoro.update (now, pomoAction) model.pomodoroModel),
+                                gtdModel <- ( (GTD.update GTD.DisableFirstHighlighting) << (GTD.update GTD.EnableNewTaskAppending) <| model.gtdModel)
+                            }
+
+                Pomodoro.Stop -> 
+                    { model |
+                        pomodoroModel <- (Pomodoro.update (now, pomoAction) model.pomodoroModel),
+                        gtdModel <- ( (GTD.update GTD.DisableFirstHighlighting) << (GTD.update GTD.EnableNewTaskAppending) <| model.gtdModel)
+                    }
+
+                otherwise ->
                     { model |
                         pomodoroModel <- (Pomodoro.update (now, pomoAction) model.pomodoroModel)
                     }
@@ -92,9 +121,10 @@ handleIncomingAction action =
             NoOpIncoming -> NoOp
 
             (PomodoroIncomingAction (Pomodoro.RequestStart)) ->      (PomodoroAction (Pomodoro.Start))
-            (PomodoroIncomingAction (Pomodoro.RequestContinue)) ->   (PomodoroAction (Pomodoro.Continue))
+            (PomodoroIncomingAction (Pomodoro.RequestContinue phase)) ->   (PomodoroAction (Pomodoro.Continue phase))
             (PomodoroIncomingAction (Pomodoro.RequestStop)) ->       (PomodoroAction (Pomodoro.Stop))
 
+            (GTDIncomingAction (GTD.RequestMoveTaskToTop id) ) ->              (GTDAction (GTD.MoveTaskToTop id) )
             (GTDIncomingAction (GTD.RequestAppendTask desc) ) ->               (GTDAction (GTD.AppendTask desc) )
             (GTDIncomingAction (GTD.RequestRemoveTask id) ) ->                 (GTDAction (GTD.RemoveTask id) )
             (GTDIncomingAction (GTD.RequestUpdateNewTaskDescription desc) ) -> (GTDAction (GTD.UpdateNewTaskDescription desc) )

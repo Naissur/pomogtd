@@ -1,16 +1,19 @@
 .gtd{
 
     .gtd__newTask{
+
+        border-bottom: 1px solid #555;
         
         .gtd__newTask__input{
             background: none;
             border: none;
 
             width: 100%;
+            height: 32px;
             padding: 4px 13px;
 
 
-            border-bottom: 1px solid #333;
+            border-bottom: 1px solid #111;
 
             font-size: 16px;
             color: #eee;
@@ -24,7 +27,24 @@
 
     .gtd__tasksPoolView{
         padding: 9px 0px;
-        
+
+        .gtd__tasksPoolView__tasks{
+            &.highlightFirst{
+                .gtd__task{
+
+                    .gtd__task__description{
+                        color: #333;
+                    }
+
+                    &:first-of-type{
+                        .gtd__task__description{
+                            color: #eee;
+                        }
+                        background-color: rgba(#000, 0.2);
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -37,36 +57,87 @@
 
     color: #999;
 
-    transition: all 0.2s;
-
     &:hover{
-        background: rgba(#000, 0.3);
-        color: #fff;
+        background-color: rgba(#000, 0.3);
 
-        .gtd__task__remove{
+        .gtd__task__description{
+            transition: background-color 0.2s,
+                        color 0.2s,
+                        padding 0.0s 0.0s;
+            //padding-right: 56px;
+            color: #fff!important;
+        }
+
+        .gtd__task__controls{
             opacity: 1;
         }
     }
 
-    .gtd__task__remove{
-        opacity: 0;
+
+    .gtd__task__description{
+        padding: 3px 0px;
+        padding-right: 56px;
+        transition: background-color 0.2s,
+                    color 0.2s,
+                    padding 0.0s 0.1s;
+    }
+
+    .gtd__task__controls{
+        display: block;
 
         position: absolute;
-        right: 5px;
-        top: 5px;
+        right: 0px;
+        top: 0px;
+        bottom: 0px;
 
-        width: 24px;
-        height: 24px;
-        text-align: center;
+        padding: 5px;
+
+        opacity: 0;
+
+        transition: all 0.2s;
+    }
+
+
+    .gtd__task__controls__itemContainer{
+        display: inline-block;
+        width: 30px;
+        height: 30px;
+        padding: 2px;
 
         cursor: pointer;
+    }
+
+    .gtd__task__controls__item{
+        display: block;
+        width: 26px;
+        height: 26px;
+
+
+        background-size: 22px;
+        background-repeat: no-repeat;
+        background-position: center center;
+
 
         transition: all 0.2s;
 
         &:hover{
-            background: rgba(#000, 0.3);
+            background-color: rgba(#000, 0.3);
             color: #fff;
         }
+    }
+
+    .gtd__task__controls__remove{
+        background-image: url('/images/ic_remove.svg');
+    }
+    .gtd__task__controls__markAsDone{
+        background-image: url('/images/ic_check.svg');
+    }
+    .gtd__task__controls__moveUp{
+        background-image: url('/images/ic_up.svg');
+    }
+
+    .gtd__task__markAsDone{
+        right: 25px;
     }
 }
 

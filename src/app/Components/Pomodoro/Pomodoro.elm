@@ -74,12 +74,12 @@ getNextPhase phase =
 type Action = NoOp
              |UpdateTime
              |Start
-             |Continue
+             |Continue Phase
              |Stop
 
 -- Actions outgoing from the component, similiar to requests for actions
 type OutgoingAction  = RequestStart
-                      |RequestContinue
+                      |RequestContinue Phase
                       |RequestStop
 
 update : (Time.Time, Action) -> Model -> Model
@@ -126,9 +126,9 @@ update (now, action) model =
                     timeEnding <- (now + workTime)
                 }
 
-        Continue ->
+        Continue phase ->
                 let
-                    phaseTime = getPhaseTime model.phase
+                    phaseTime = getPhaseTime phase
                 in
                     { model | 
                         paused <- False,
@@ -189,7 +189,7 @@ controlsView address model =
 
         if model.paused then
             button [ 
-                onClick address RequestContinue,
+                onClick address (RequestContinue model.phase),
                 class "pomodoro__controls__resume"
             ][
                 case model.phase of
@@ -202,7 +202,7 @@ controlsView address model =
         if (model.started && (not model.paused) )  then
             button [ 
                 onClick address RequestStop,
-                class "pomodoro__controls__stop"
+                class "faded pomodoro__controls__stop"
             ][
                 text "Stop"
             ]

@@ -1,10 +1,11 @@
 module Components.GTD.GTD where
 
 import Html exposing (Html, a, form, input, div, text)
-import Html.Attributes exposing (value, placeholder, type', src, class, classList)
+import Html.Attributes exposing (attribute, value, placeholder, type', src, class, classList)
 import Html.Events exposing (onClick, onSubmit)
 import Signal exposing (..)
 import Time exposing (fps)
+import List exposing(append)
 
 import Common.EventUtils exposing (onInput, onSubmitPreventDefault)
 
@@ -22,14 +23,16 @@ type alias Task = {
 type alias Model = {
     tasks : List Task,
     newTaskDescription : String,
-    enableNewTaskAdding : Bool
+    enableNewTaskAdding : Bool,
+    highlightFirst : Bool
 }
 
 initialModel : Model
 initialModel =  {
                     tasks = [],
                     newTaskDescription = "",
-                    enableNewTaskAdding = True
+                    enableNewTaskAdding = True,
+                    highlightFirst = False
                 }
 
 -- UPDATES
@@ -37,11 +40,15 @@ initialModel =  {
 type Action = NoOp
              |RemoveTask TaskId
              |AppendTask String
-             |EnableNewTaskAppenging
+             |MoveTaskToTop TaskId 
+             |EnableNewTaskAppending
              |DisableNewTaskAppending
+             |EnableFirstHighlighting
+             |DisableFirstHighlighting
              |UpdateNewTaskDescription String
 
 type OutgoingAction = NoOpOutgoingAction
+                     |RequestMoveTaskToTop TaskId
                      |RequestRemoveTask TaskId
                      |RequestAppendTask String
                      |RequestUpdateNewTaskDescription String
@@ -57,15 +64,34 @@ update action model =
                     enableNewTaskAdding <- False
                 }
 
-            EnableNewTaskAppenging -> 
+            EnableNewTaskAppending -> 
                 { model |
                     enableNewTaskAdding <- True
+                }
+
+            EnableFirstHighlighting ->
+                { model |
+                    highlightFirst <- True
+                }
+
+            DisableFirstHighlighting ->
+                { model |
+                    highlightFirst <- False
                 }
 
             UpdateNewTaskDescription desc ->
                 {model |
                     newTaskDescription <- desc
                 }
+
+            MoveTaskToTop taskId -> 
+                let
+                    taskToMove = List.filter (( (==) taskId) << .id) model.tasks
+                    newTasks = List.filter (( (/=) taskId) << .id) model.tasks
+                in
+                    {model |
+                        tasks <- append taskToMove newTasks
+                    }
 
             RemoveTask taskId ->
                 let
@@ -93,7 +119,13 @@ update action model =
 
 newTaskView : Signal.Address OutgoingAction -> Model -> Html.Html
 newTaskView address model = 
-    div [ class "gtd__newTask" ] [
+    div [ 
+        classList [
+            ("gtd__newTask", True),
+            ("collapsed", not model.enableNewTaskAdding),
+            ("expanded", model.enableNewTaskAdding)
+        ]
+    ] [
         form [
             onSubmitPreventDefault address (RequestAppendTask model.newTaskDescription)
         ][
@@ -113,23 +145,50 @@ newTaskView address model =
 taskView : Signal.Address OutgoingAction -> Task -> Html.Html
 taskView address task = 
     div [ class "gtd__task" ][
-        div [ class "gtd__task__description" ][
-            text task.description
+        div [ 
+            class "gtd__task__controls"
+        ][
+        
+            div [ class "gtd__task__controls__itemContainer" ][
+                div [ 
+                    class "gtd__task__controls__item gtd__task__controls__moveUp",
+                    onClick address (RequestMoveTaskToTop task.id)
+                ][]
+            ],
+
+            div [ class "gtd__task__controls__itemContainer" ][
+                div [ 
+                    class "gtd__task__controls__item gtd__task__controls__markAsDone",
+                    onClick address (RequestRemoveTask task.id)
+                ][]
+            ]
+            --,
+
+            --div [ class "gtd__task__controls__itemContainer" ][
+            --    div [ 
+            --        class "gtd__task__controls__item gtd__task__controls__remove",
+            --        onClick address (RequestRemoveTask task.id)
+            --    ][ ]
+            --]
+
         ],
 
-        div [ 
-            class "gtd__task__remove",
-            onClick address (RequestRemoveTask task.id)
-        ][
-            text "x"
+        div [ class "gtd__task__description" ][
+            text task.description
         ]
+
     ]
 
 tasksPoolView : Signal.Address OutgoingAction -> Model -> Html.Html
 tasksPoolView address model = 
     div [ class "gtd__tasksPoolView" ][
 
-        div [ class "gtd__tasksPoolView__tasks" ]
+        div [ 
+            classList [
+                ("gtd__tasksPoolView__tasks", True),
+                ("highlightFirst", model.highlightFirst)
+            ]
+        ]
             (List.map (taskView address) model.tasks)
     ]
 
