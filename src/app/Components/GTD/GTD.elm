@@ -1,12 +1,12 @@
 module Components.GTD.GTD where
 
-import Html exposing (Html, a, h2, h3, form, input, div, text)
+import Html exposing (Html, p, a, h2, h3, form, input, div, text)
 import Html.Attributes exposing (attribute, value, placeholder, type', src, class, classList)
 import Html.Events exposing (onClick, onSubmit)
 import Signal exposing (..)
 import Time exposing (fps)
 import Date exposing (..)
-import List exposing(append)
+import List exposing(length, append)
 
 import Common.EventUtils exposing (onInput, onSubmitPreventDefault)
 import Common.TimeUtils exposing (getMonthString)
@@ -237,16 +237,6 @@ tasksPoolView address model =
             )
     ]
 
-dateDoneTasksView : Signal.Address OutgoingAction -> List Task -> Date.Date -> Html.Html
-dateDoneTasksView address tasks date = 
-    div [ class "gtd__dateDoneTasksView" ] [
-        h3 [ class "gtd__dateDoneTasksView__date" ][
-            text ( (toString << month <| date) ++ " " ++ (toString <| day <| date) )
-        ],
-
-        div [ class "gtd__dateDoneTasksView__tasks" ]
-            (List.map (taskView address) tasks)
-    ]
     
 
 doneTasksView : Signal.Address OutgoingAction -> Model -> Html.Html
@@ -257,9 +247,20 @@ doneTasksView address model =
             text "Done"
         ],
 
-
-        dateDoneTasksView address
-            (model.tasks |> List.filter ( .done >> ( (==) True) ) )
-
-            (Date.fromTime 1441561684846 )
+        let 
+            doneTasksCount =   model.tasks
+                            |> List.filter ( .done >> ( (==) True) )
+                            |> length
+        in
+            if (doneTasksCount == 0) then
+                p [ class "gtd__doneTasksView__noTasks" ][
+                    text "Nothing done yet!"
+                ] 
+            else
+                div [ class "gtd__doneTasksView__tasks" ]
+                    (model.tasks 
+                        |> List.filter ( .done >> ( (==) True) )
+                        |> List.sortBy ( .timeDone )
+                        |> List.map (taskView address)
+                    )
     ]

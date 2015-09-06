@@ -4,6 +4,10 @@ import Time exposing (..)
 import Date exposing (..)
 import String exposing (padLeft)
 
+
+getMonthDayString : Date -> (String, String)
+getMonthDayString date = ( (toString << month <| date) , (toString <| day <| date) )
+
 getMonthString : Date -> String
 getMonthString d = 
         case month d of

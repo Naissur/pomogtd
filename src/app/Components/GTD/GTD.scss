@@ -29,6 +29,18 @@
         padding: 9px 0px;
 
         .gtd__tasksPoolView__tasks{
+
+            .gtd__tasksPoolView__tasks__task{
+                transition: all 0.2s;
+
+                overflow: hidden;
+                max-height: 102px;
+
+                &.done{
+                    max-height: 0px;
+                }
+            }
+
             &.highlightFirst{
                 .gtd__task{
 
@@ -52,9 +64,16 @@
             margin-bottom: 26px;
             font-weight: 500;
         }
+
+        .gtd__doneTasksView__noTasks{
+            color: #999;
+        }
     }
 }
 
+
+$max_task_height: 102px;
+$max_description_height: 90px;
 
 .gtd__task{
     padding: 6px 14px;
@@ -68,6 +87,7 @@
         background-color: rgba(#000, 0.3);
 
         .gtd__task__description{
+            overflow-y: auto;
             transition: background-color 0.2s,
                         color 0.2s,
                         padding 0.0s 0.0s;
@@ -82,8 +102,11 @@
 
 
     .gtd__task__description{
-        padding: 3px 0px;
-        padding-right: 56px;
+        max-height: $max_description_height;
+        overflow-y: hidden;
+
+        padding: 3px 2px;
+        margin-right: 56px;
         transition: background-color 0.2s,
                     color 0.2s,
                     padding 0.0s 0.1s;
