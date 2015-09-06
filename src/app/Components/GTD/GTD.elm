@@ -1,13 +1,15 @@
 module Components.GTD.GTD where
 
-import Html exposing (Html, a, form, input, div, text)
+import Html exposing (Html, a, h2, h3, form, input, div, text)
 import Html.Attributes exposing (attribute, value, placeholder, type', src, class, classList)
 import Html.Events exposing (onClick, onSubmit)
 import Signal exposing (..)
 import Time exposing (fps)
+import Date exposing (..)
 import List exposing(append)
 
 import Common.EventUtils exposing (onInput, onSubmitPreventDefault)
+import Common.TimeUtils exposing (getMonthString)
 
 
 -- MODEL
@@ -16,12 +18,15 @@ type alias TaskId = Int
 
 type alias Task = {
     id : TaskId,
+    done : Bool,
+    timeDone : Time.Time,
     description : String
 }
 
 
 type alias Model = {
     tasks : List Task,
+    lastId : Int,
     newTaskDescription : String,
     enableNewTaskAdding : Bool,
     highlightFirst : Bool
@@ -29,6 +34,7 @@ type alias Model = {
 
 type alias SerealizedModel = {
     tasks : List Task,
+    lastId : Int,
     newTaskDescription : String,
     enableNewTaskAdding : Bool,
     highlightFirst : Bool
@@ -42,6 +48,7 @@ deSerealizeModel model = Just model
 
 initialModel : Model
 initialModel =  {
+                    lastId = 0,
                     tasks = [],
                     newTaskDescription = "",
                     enableNewTaskAdding = True,
@@ -52,6 +59,7 @@ initialModel =  {
 
 type Action = NoOp
              |RemoveTask TaskId
+             |MarkTaskAsDone TaskId Time.Time
              |AppendTask String
              |MoveTaskToTop TaskId 
              |EnableNewTaskAppending
@@ -62,6 +70,7 @@ type Action = NoOp
 
 type OutgoingAction = NoOpOutgoingAction
                      |RequestMoveTaskToTop TaskId
+                     |RequestMarkTaskAsDone TaskId
                      |RequestRemoveTask TaskId
                      |RequestAppendTask String
                      |RequestUpdateNewTaskDescription String
@@ -73,57 +82,59 @@ update action model =
             NoOp -> model
 
             DisableNewTaskAppending -> 
-                { model |
-                    enableNewTaskAdding <- False
-                }
+                { model | enableNewTaskAdding <- False }
 
             EnableNewTaskAppending -> 
-                { model |
-                    enableNewTaskAdding <- True
-                }
+                { model | enableNewTaskAdding <- True }
 
             EnableFirstHighlighting ->
-                { model |
-                    highlightFirst <- True
-                }
+                { model | highlightFirst <- True }
 
             DisableFirstHighlighting ->
-                { model |
-                    highlightFirst <- False
-                }
+                { model | highlightFirst <- False }
 
             UpdateNewTaskDescription desc ->
-                {model |
-                    newTaskDescription <- desc
-                }
+                { model | newTaskDescription <- desc }
 
             MoveTaskToTop taskId -> 
                 let
                     taskToMove = List.filter (( (==) taskId) << .id) model.tasks
                     newTasks = List.filter (( (/=) taskId) << .id) model.tasks
                 in
-                    {model |
-                        tasks <- append taskToMove newTasks
-                    }
+                    {model | tasks <- append taskToMove newTasks }
 
             RemoveTask taskId ->
                 let
                     newTasks = List.filter (( (/=) taskId) << .id) model.tasks
                 in
-                    {model |
-                        tasks <- newTasks
-                    }
+                    { model | tasks <- newTasks }
+                
+            MarkTaskAsDone taskId now ->
+                let
+                    newTasks = List.map (
+                                            \task -> if task.id == taskId then 
+                                                        {task | 
+                                                            done <- True,
+                                                            timeDone <- now
+                                                        } else 
+                                                        task
+                                        ) model.tasks
+                in
+                    { model | tasks <- newTasks }
                 
             AppendTask taskDescription ->
                 let
-                    newId = List.length model.tasks
+                    newId = model.lastId + 1
                     newTask = {
                         id = newId,
+                        done = False,
+                        timeDone = 0,
                         description = taskDescription
                     }
                 in
-                    {model |
-                        tasks <-  newTask :: model.tasks,
+                    { model |
+                        lastId <- newId,
+                        tasks <-  model.tasks ++ [newTask],
                         newTaskDescription <- ""
                     }
 
@@ -155,8 +166,29 @@ newTaskView address model =
     ]
 
 
-taskView : Signal.Address OutgoingAction -> Task -> Html.Html
-taskView address task = 
+doneTaskView : Signal.Address OutgoingAction -> Task -> Html.Html
+doneTaskView address task = 
+    div [ class "gtd__task" ][
+        div [ 
+            class "gtd__task__controls"
+        ][
+        
+            div [ class "gtd__task__controls__itemContainer" ][
+                div [ 
+                    class "gtd__task__controls__item gtd__task__controls__remove",
+                    onClick address (RequestRemoveTask task.id)
+                ][]
+            ]
+        ],
+
+        div [ class "gtd__task__description" ][
+            text task.description
+        ]
+
+    ]
+
+undoneTaskView : Signal.Address OutgoingAction -> Task -> Html.Html
+undoneTaskView address task = 
     div [ class "gtd__task" ][
         div [ 
             class "gtd__task__controls"
@@ -172,18 +204,9 @@ taskView address task =
             div [ class "gtd__task__controls__itemContainer" ][
                 div [ 
                     class "gtd__task__controls__item gtd__task__controls__markAsDone",
-                    onClick address (RequestRemoveTask task.id)
+                    onClick address (RequestMarkTaskAsDone task.id)
                 ][]
             ]
-            --,
-
-            --div [ class "gtd__task__controls__itemContainer" ][
-            --    div [ 
-            --        class "gtd__task__controls__item gtd__task__controls__remove",
-            --        onClick address (RequestRemoveTask task.id)
-            --    ][ ]
-            --]
-
         ],
 
         div [ class "gtd__task__description" ][
@@ -191,6 +214,12 @@ taskView address task =
         ]
 
     ]
+
+taskView : Signal.Address OutgoingAction -> Task -> Html.Html
+taskView address task = 
+    case task.done of
+        True -> doneTaskView address task
+        False -> undoneTaskView address task
 
 tasksPoolView : Signal.Address OutgoingAction -> Model -> Html.Html
 tasksPoolView address model = 
@@ -202,15 +231,35 @@ tasksPoolView address model =
                 ("highlightFirst", model.highlightFirst)
             ]
         ]
-            (List.map (taskView address) model.tasks)
+            (model.tasks 
+                |> List.filter ( .done >> ( (==) False) ) 
+                |> List.map (taskView address) 
+            )
     ]
 
-view : Signal.Address OutgoingAction -> Model -> Html.Html
-view address model = 
-    div [class "gtd" ] [
-        newTaskView address model,
-        tasksPoolView address model
+dateDoneTasksView : Signal.Address OutgoingAction -> List Task -> Date.Date -> Html.Html
+dateDoneTasksView address tasks date = 
+    div [ class "gtd__dateDoneTasksView" ] [
+        h3 [ class "gtd__dateDoneTasksView__date" ][
+            text ( (toString << month <| date) ++ " " ++ (toString <| day <| date) )
+        ],
+
+        div [ class "gtd__dateDoneTasksView__tasks" ]
+            (List.map (taskView address) tasks)
     ]
+    
+
+doneTasksView : Signal.Address OutgoingAction -> Model -> Html.Html
+doneTasksView address model = 
+    div [ class "gtd__doneTasksView" ][
+
+        h2 [ class "gtd__doneTasksView__title" ][
+            text "Done"
+        ],
 
 
+        dateDoneTasksView address
+            (model.tasks |> List.filter ( .done >> ( (==) True) ) )
 
+            (Date.fromTime 1441561684846 )
+    ]

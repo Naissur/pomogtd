@@ -2,13 +2,15 @@
 @import "Components/GTD/GTD.scss";
 @import "Common/common.scss";
 
-::-moz-selection { background-color: $color_main; color: #000; }
-::selection {      background-color: $color_main; color: #000; }
+::-moz-selection { background-color: $color_main; color: #fff; }
+::selection {      background-color: $color_main; color: #fff; }
 
 .wrapper{
     max-width: 1200px;
     padding: 0px 20px;
     margin: auto;
+
+    overflow-x: hidden;
 
     opacity: 0;
     transition: all 0.5s;
@@ -24,14 +26,13 @@
     padding: 20px 0px;
 
     .header__logo{
-        display: block;
+        display: inline-block;
+        vertical-align: middle;
+
         width: 220px;
         height: 70px;
         padding-right: 5px;
-
-        @media screen and (max-width: $break_small){
-            margin: auto;
-        }
+        margin-right: 30px;
 
         opacity: 0.2;
         transition: all 0.2s;
@@ -42,14 +43,79 @@
             opacity: 1;
         }
     }
+
+    .header__screenLink{
+        vertical-align: middle;
+
+        padding: 14px 24px;
+
+        color: #444;
+
+        &.active{
+            color: #999;
+        }
+
+        transition: all 0.2s;
+        border-bottom: 1px solid rgba(0,0,0,0);
+
+        &:hover{
+            color: #eee;
+
+            text-decoration: none;
+            background-color: rgba(#000, 0.05);
+            border-bottom: 1px solid #333;
+        }
+    }
 }
 
+$screen_width: 400px;
+
 .main{
-    width: 300px;
+    width: $screen_width;
     margin: auto;
     padding-bottom: 100px;
 
     text-align: center;
+    position: relative;
 
     //border: 1px solid #000;
+
+    &.showTodo .main__container{
+        transform: translateX(0px);
+
+        .main__done{
+            opacity: 0;
+        }
+    }
+
+    &.showDone .main__container{
+        transform: translateX(-$screen_width);
+        .main__todo{
+            opacity: 0;
+        }
+    }
+
+
+    .main__container{
+        display: inline-block;
+        width: $screen_width*2;
+
+        transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        
+
+        .main__todo, .main__done{
+            display: inline-block;
+            vertical-align: top;
+            width: $screen_width;
+
+            opacity: 1;
+            transition: opacity 0.3s;
+        }
+    }
+
+    .main__todoView, .main__doneView{
+        display: block;
+        width: 320px;
+        margin: auto;
+    }
 }

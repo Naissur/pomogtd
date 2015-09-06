@@ -98,3 +98,14 @@ button.faded{
         transition: opacity 0.2s;
     }
 }
+
+
+a{
+    text-decoration: none;
+
+    color: #eee;
+
+    &:hover{
+        text-decoration: underline;
+    }
+}

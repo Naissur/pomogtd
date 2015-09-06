@@ -1,9 +1,26 @@
 module Common.TimeUtils where
 
 import Time exposing (..)
+import Date exposing (..)
 import String exposing (padLeft)
 
-formatTimeString: Time.Time -> String
+getMonthString : Date -> String
+getMonthString d = 
+        case month d of
+            Jan -> "Jan"
+            Feb -> "Feb"
+            Mar -> "Mar"
+            Apr -> "Apr"
+            May -> "May"
+            Jun -> "Jun"
+            Jul -> "Jul"
+            Aug -> "Aug"
+            Sep -> "Sep"
+            Oct -> "Oct"
+            Nov -> "Nov"
+            Dec -> "Dec"
+
+formatTimeString : Time.Time -> String
 formatTimeString time = 
              let 
                 
