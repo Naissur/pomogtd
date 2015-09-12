@@ -284,11 +284,12 @@ doneTasksView address model =
         -}
 
         let 
-            doneTasksCount =   model.tasks
-                            |> List.filter ( .done >> ( (==) True) )
-                            |> length
+            doneTasks = model.tasks
+                     |> List.filter ( .done >> ( (==) True) )
 
-            groupedByDates = extractTasksGroupedByMonthDay model.tasks
+            doneTasksCount = List.length doneTasks
+
+            groupedByDates = extractTasksGroupedByMonthDay doneTasks
         in
             if (doneTasksCount == 0) then
                 p [ class "gtd__doneTasksView__noTasks" ][

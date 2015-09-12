@@ -177,7 +177,7 @@ view address model =
     div [ class "wrapper" ] [
         div [ class "header" ] [
             img [ 
-                src "/images/logo.svg", 
+                src "images/logo.svg", 
                 class "header__logo" 
             ][],
 
