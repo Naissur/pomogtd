@@ -208,6 +208,7 @@ update (now, action) model =
                     paused <- False,
                     started <- False,
                     timeLeft <- workTime,
+                    phase <- Working,
                     timeEnding <- 0,
 
                     log <- PomodoroLog.update ( (PomodoroLog.AppendPomodoroLog) pomodoroLog ) model.log
