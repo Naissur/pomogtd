@@ -4,7 +4,6 @@ import Time exposing (..)
 import Date exposing (..)
 import String exposing (padLeft)
 import List.Extra exposing (groupBy)
-import Debug exposing (log)
 import Maybe
 
 
@@ -19,16 +18,9 @@ haveSameDayAndMonth date1 date2 =
 
 extractDatesUniqueToMonthDay : List Date -> List Date
 extractDatesUniqueToMonthDay dates =
-                    let
-                        a = 
-                            dates
-                            |> List.sortBy (toTime)
-                            |> groupBy (haveSameDayAndMonth)
-                            |> List.map (List.map (getMonthDayString >> snd >> toString) )
-                            |> log "extractDatesUniqueToMonthDay: " 
-                    in
                         dates
                         |> List.sortBy (toTime)
+                        |> List.reverse
                         |> groupBy (haveSameDayAndMonth)
                         |> List.map (Maybe.withDefault (fromTime 0) << List.head)
 

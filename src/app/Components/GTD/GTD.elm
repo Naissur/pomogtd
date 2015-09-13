@@ -35,8 +35,6 @@ extractTasksGroupedByMonthDay : List Task -> List (Date, (List Task) )
 extractTasksGroupedByMonthDay tasks = 
                     let
                         dates = extractDatesUniqueToMonthDay << List.map (fromTime << .timeDone) <| tasks
-
-                        --test = Debug.log "extractTasksGroupedByMonthDay > tasks: " (List.map (toString << getMonthDayString) dates)
                     in
                         List.map ( \date -> (date, getTasksNearDate tasks date)) dates
                         
@@ -302,7 +300,5 @@ doneTasksView address model =
             else
                 div [class "gtd__doneTasksView__tasks"]
                     (groupedByDates 
-                        |> List.sortBy (toTime << fst)
-                        |> List.reverse
                         |> List.map (\(date, tasks) -> (doneTasksDateBoxView address date tasks ) ) )
     ]
