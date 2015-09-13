@@ -2,7 +2,7 @@
 
 Pomodoro + GTD
 
-### Compilation
+### Building
 
 Install depencencies by running
 ```bash
