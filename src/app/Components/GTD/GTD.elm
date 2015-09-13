@@ -8,6 +8,7 @@ import Time exposing (fps)
 import Date exposing (Date, toTime, fromTime)
 import List exposing(length, append)
 import Maybe exposing (withDefault, map)
+import Debug
 
 import Common.EventUtils exposing (onInput, onSubmitPreventDefault)
 import Common.TimeUtils exposing (extractDatesUniqueToMonthDay,  haveSameDayAndMonth, getMonthDayString)
@@ -34,6 +35,8 @@ extractTasksGroupedByMonthDay : List Task -> List (Date, (List Task) )
 extractTasksGroupedByMonthDay tasks = 
                     let
                         dates = extractDatesUniqueToMonthDay << List.map (fromTime << .timeDone) <| tasks
+
+                        --test = Debug.log "extractTasksGroupedByMonthDay > tasks: " (List.map (toString << getMonthDayString) dates)
                     in
                         List.map ( \date -> (date, getTasksNearDate tasks date)) dates
                         
@@ -268,6 +271,7 @@ doneTasksDateBoxView address date tasks =
             div [ class "gtd__doneTasksDateBox__tasks" ]
                 (tasks 
                     |> List.sortBy ( .timeDone )
+                    |> List.reverse
                     |> List.map (taskView address)
                 )
         ]
