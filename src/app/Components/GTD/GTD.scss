@@ -96,14 +96,16 @@ $max_task_height: 102px;
 $max_description_height: 90px;
 
 .gtd__task{
-    padding: 6px 14px;
+    padding: 10px 10px;
     text-align: left;
 
     position: relative;
 
     color: #999;
 
-    &:hover{
+    cursor: pointer;
+
+    &:hover, &.editing{
         background-color: rgba(#000, 0.3);
 
         .gtd__task__description{
@@ -120,24 +122,72 @@ $max_description_height: 90px;
         }
     }
 
+    &.editing{
+        .gtd__task__description__editing{
+            display: block;
+        }
+
+        .gtd__task__description{
+            display: none;
+        }
+    }
+
 
     .gtd__task__description{
         max-height: $max_description_height;
         overflow-y: hidden;
 
-        padding: 3px 2px;
+        padding: 3px 6px;
         margin-right: 56px;
         transition: background-color 0.2s,
                     color 0.2s,
                     padding 0.0s 0.1s;
     }
 
+    .gtd__task__description__editing{
+        display: none;
+
+        .gtd__task__description__editing__input{
+            //max-height: $max_description_height;
+            //overflow-y: hidden;
+
+
+            width: 240px;
+            padding: 2px 5px;
+            margin-right: 56px;
+
+            resize: vertical;
+
+            font-size: 16px;
+
+            background-color: rgba(#000,0.1);
+            border-color: #111;
+            color: white;
+        }
+
+        .gtd__task__description__editing__submit{
+            margin: 10px 0px;
+            margin-bottom: 0px;
+
+            padding: 6px 20px;
+            font-size: 16px;
+        }
+
+        .gtd__task__description__editing__cancel{
+            margin: 10px 0px;
+            margin-bottom: 0px;
+
+            padding: 6px 20px;
+            font-size: 16px;
+        }
+    }
+
     .gtd__task__controls{
         display: block;
 
         position: absolute;
-        right: 0px;
-        top: 0px;
+        right: 4px;
+        top: 3px;
         bottom: 0px;
 
         padding: 5px;

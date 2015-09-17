@@ -13,17 +13,14 @@
   width: 0px;
   height: 0px;
 }
-::-webkit-scrollbar-thumb {
-    background: rgba(#fff, 0.2);
-}
-::-webkit-scrollbar-thumb:hover {  background: rgba(#fff, 0.3); }
-::-webkit-scrollbar-thumb:active { background: rgba(#fff, 0.2); }
-::-webkit-scrollbar-track {
-    background: rgba(#000,0);
-}
-::-webkit-scrollbar-track:hover {  background: rgba(#000,0); }
-::-webkit-scrollbar-track:active { background: rgba(#000,0); }
-::-webkit-scrollbar-corner { background: transparent; }
+
+::-webkit-scrollbar-thumb {         background: rgba(#fff, 0.2); }
+::-webkit-scrollbar-thumb:hover {   background: rgba(#fff, 0.3); }
+::-webkit-scrollbar-thumb:active {  background: rgba(#fff, 0.2); }
+::-webkit-scrollbar-track {         background: rgba(#000,0); }
+::-webkit-scrollbar-track:hover {   background: rgba(#000,0); }
+::-webkit-scrollbar-track:active {  background: rgba(#000,0); }
+::-webkit-scrollbar-corner {        background: transparent; }
 
 .wrapper{
     max-width: 1200px;

@@ -1,6 +1,6 @@
 module Components.GTD.GTD where
 
-import Html exposing (Html, p, a, h2, h3, form, input, div, text)
+import Html exposing (Html, button, textarea, p, a, h2, h3, form, input, div, text)
 import Html.Attributes exposing (attribute, value, placeholder, type', src, class, classList)
 import Html.Events exposing (onClick, onSubmit)
 import Signal exposing (..)
@@ -10,7 +10,7 @@ import List exposing(length, append)
 import Maybe exposing (withDefault, map)
 import Debug
 
-import Common.EventUtils exposing (onInput, onSubmitPreventDefault)
+import Common.EventUtils exposing (onChange, onInput, onSubmitPreventDefault)
 import Common.TimeUtils exposing (extractDatesUniqueToMonthDay,  haveSameDayAndMonth, getMonthDayString)
 
 
@@ -20,9 +20,11 @@ type alias TaskId = Int
 
 type alias Task = {
     id : TaskId,
+    editing: Bool,
     done : Bool,
     timeDone : Time.Time,
-    description : String
+    description : String,
+    pendingDescription : String
 }
 
 
@@ -77,22 +79,37 @@ initialModel =  {
 -- UPDATES
 
 type Action = NoOp
+
+             |StartEditingTaskDescription TaskId
+             |UpdateEditingTaskDescription TaskId String
+             |SaveEditedTaskDescription TaskId
+             |CancelEditingTaskDescription TaskId
+
+             |UpdateNewTaskDescription String
+
+             |AppendTask String
              |RemoveTask TaskId
              |MarkTaskAsDone TaskId Time.Time
-             |AppendTask String
              |MoveTaskToTop TaskId 
+
              |EnableNewTaskAppending
              |DisableNewTaskAppending
              |EnableFirstHighlighting
              |DisableFirstHighlighting
-             |UpdateNewTaskDescription String
 
 type OutgoingAction = NoOpOutgoingAction
+                     |RequestChangePendingDescriptionForTask TaskId String
+                     |RequestStartEditingTaskDescription TaskId
+                     |RequestUpdateEditingTaskDescription TaskId String
+                     |RequestSaveEditedTaskDescription TaskId
+                     |RequestCancelEditingTaskDescription TaskId
+
+                     |RequestUpdateNewTaskDescription String
+                     |RequestAppendTask String
+                     |RequestRemoveTask TaskId
+
                      |RequestMoveTaskToTop TaskId
                      |RequestMarkTaskAsDone TaskId
-                     |RequestRemoveTask TaskId
-                     |RequestAppendTask String
-                     |RequestUpdateNewTaskDescription String
 
 
 update : Action -> Model -> Model
@@ -135,7 +152,8 @@ update action model =
                                                         {task | 
                                                             done <- True,
                                                             timeDone <- now
-                                                        } else 
+                                                        } 
+                                                     else 
                                                         task
                                         ) model.tasks
                 in
@@ -147,8 +165,10 @@ update action model =
                     newTask = {
                         id = newId,
                         done = False,
+                        editing = False,
                         timeDone = 0,
-                        description = taskDescription
+                        description = taskDescription,
+                        pendingDescription = ""
                     }
                 in
                     { model |
@@ -156,6 +176,58 @@ update action model =
                         tasks <-  model.tasks ++ [newTask],
                         newTaskDescription <- ""
                     }
+
+            StartEditingTaskDescription taskId -> 
+                    {model | tasks <-  model.tasks
+                                    |> List.map (
+                                           \task -> if (task.id == taskId) then
+                                                        {task | 
+                                                            editing <- True,
+                                                            pendingDescription <- task.description
+                                                        }
+                                                    else 
+                                                        task
+                                       )
+                                    }
+
+            UpdateEditingTaskDescription taskId desc ->
+                    {model | tasks <-  model.tasks
+                                    |> List.map (
+                                           \task -> if (task.id == taskId) then
+                                                        {task | 
+                                                            pendingDescription <- desc
+                                                        }
+                                                    else 
+                                                        task
+                                       )
+                                    }
+
+            SaveEditedTaskDescription taskId -> 
+                    {model | tasks <-  model.tasks
+                                    |> List.map (
+                                           \task -> if (task.id == taskId) then
+                                                        {task | 
+                                                            editing <- False,
+                                                            description <- task.pendingDescription,
+                                                            pendingDescription <- ""
+                                                        }
+                                                    else 
+                                                        task
+                                       )
+                                    }
+
+            CancelEditingTaskDescription taskId -> 
+                    {model | tasks <-  model.tasks
+                                    |> List.map (
+                                           \task -> if (task.id == taskId) then
+                                                        {task | 
+                                                            editing <- False,
+                                                            pendingDescription <- ""
+                                                        }
+                                                    else 
+                                                        task
+                                       )
+                                    }
 
 -- VIEW
 
@@ -208,7 +280,12 @@ doneTaskView address task =
 
 undoneTaskView : Signal.Address OutgoingAction -> Task -> Html.Html
 undoneTaskView address task = 
-    div [ class "gtd__task" ][
+    div [ 
+        classList [
+            ("gtd__task", True),
+            ("editing", task.editing)
+        ]
+    ][
         div [ 
             class "gtd__task__controls"
         ][
@@ -228,8 +305,37 @@ undoneTaskView address task =
             ]
         ],
 
-        div [ class "gtd__task__description" ][
+        div [ 
+            class "gtd__task__description",
+            onClick address (RequestStartEditingTaskDescription task.id),
+            onInput address (\desc -> RequestChangePendingDescriptionForTask task.id desc)
+        ][
             text task.description
+        ],
+
+        div[
+            class "gtd__task__description__editing"
+        ][
+            textarea [ 
+                class "gtd__task__description__editing__input",
+                value task.pendingDescription,
+                onChange address (\desc -> RequestUpdateEditingTaskDescription task.id desc)
+            ][
+            ],
+
+            button [
+                class "gtd__task__description__editing__submit alternative",
+                onClick address (RequestSaveEditedTaskDescription task.id)
+            ][
+                text "OK"
+            ],
+
+            button [
+                class "gtd__task__description__editing__cancel shaded",
+                onClick address (RequestCancelEditingTaskDescription task.id)
+            ][
+                text "Cancel"
+            ]
         ]
 
     ]

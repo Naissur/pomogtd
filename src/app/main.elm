@@ -118,6 +118,20 @@ update (now, action) model =
         (GTDIncomingAction (GTD.RequestUpdateNewTaskDescription desc) ) -> 
                     { model | gtdModel <- (GTD.update (GTD.UpdateNewTaskDescription desc )  model.gtdModel) }
 
+        (GTDIncomingAction (GTD.RequestStartEditingTaskDescription taskId) ) -> 
+                    { model | gtdModel <- (GTD.update (GTD.StartEditingTaskDescription taskId )  model.gtdModel) }
+
+        (GTDIncomingAction (GTD.RequestUpdateEditingTaskDescription taskId desc ) ) -> 
+                    { model | gtdModel <- (GTD.update (GTD.UpdateEditingTaskDescription taskId desc)  model.gtdModel) }
+
+        (GTDIncomingAction (GTD.RequestCancelEditingTaskDescription taskId ) ) -> 
+                    { model | gtdModel <- (GTD.update (GTD.CancelEditingTaskDescription taskId )  model.gtdModel) }
+
+
+
+        (GTDIncomingAction (GTD.RequestSaveEditedTaskDescription taskId) ) -> 
+                    { model | gtdModel <- (GTD.update (GTD.SaveEditedTaskDescription taskId )  model.gtdModel) }
+
 
         (PomodoroIncomingAction (Pomodoro.RequestStart)) ->
                     { model |
