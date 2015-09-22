@@ -160,22 +160,23 @@ update action model =
                     { model | tasks <- newTasks }
                 
             AppendTask taskDescription ->
-                let
-                    newId = model.lastId + 1
-                    newTask = {
-                        id = newId,
-                        done = False,
-                        editing = False,
-                        timeDone = 0,
-                        description = taskDescription,
-                        pendingDescription = ""
-                    }
-                in
-                    { model |
-                        lastId <- newId,
-                        tasks <-  model.tasks ++ [newTask],
-                        newTaskDescription <- ""
-                    }
+                if taskDescription == "" then model else
+                    let
+                        newId = model.lastId + 1
+                        newTask = {
+                            id = newId,
+                            done = False,
+                            editing = False,
+                            timeDone = 0,
+                            description = taskDescription,
+                            pendingDescription = ""
+                        }
+                    in
+                        { model |
+                            lastId <- newId,
+                            tasks <-  model.tasks ++ [newTask],
+                            newTaskDescription <- ""
+                        }
 
             StartEditingTaskDescription taskId -> 
                     {model | tasks <-  model.tasks
