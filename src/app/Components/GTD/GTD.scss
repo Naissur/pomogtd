@@ -239,6 +239,13 @@ $max_description_height: 90px;
     .gtd__task__markAsDone{
         right: 25px;
     }
+
+
+
+
+    &.done{
+        cursor: default
+    }
 }
 
 

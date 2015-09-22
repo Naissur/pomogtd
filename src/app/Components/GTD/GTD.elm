@@ -260,7 +260,7 @@ newTaskView address model =
 
 doneTaskView : Signal.Address OutgoingAction -> Task -> Html.Html
 doneTaskView address task = 
-    div [ class "gtd__task" ][
+    div [ class "gtd__task done" ][
         div [ 
             class "gtd__task__controls"
         ][
@@ -363,49 +363,3 @@ tasksPoolView address model =
             )
     ]
 
-    
-
-doneTasksDateBoxView : Signal.Address OutgoingAction -> Date -> List Task -> Html.Html
-doneTasksDateBoxView address date tasks =
-        div [ class "gtd__doneTasksDateBox" ][
-            
-            h2 [ class "gtd__doneTasksDateBox__date" ][
-                text <| (\(m, d) -> m ++ " " ++ d ) <| getMonthDayString <| date 
-            ],
-
-            div [ class "gtd__doneTasksDateBox__tasks" ]
-                (tasks 
-                    |> List.sortBy ( .timeDone )
-                    |> List.reverse
-                    |> List.map (taskView address)
-                )
-        ]
-
-
-doneTasksView : Signal.Address OutgoingAction -> Model -> Html.Html
-doneTasksView address model = 
-    div [ class "gtd__doneTasksView" ][
-
-        {-
-            h2 [ class "gtd__doneTasksView__title" ][
-                text "Done"
-            ],
-        -}
-
-        let 
-            doneTasks = model.tasks
-                     |> List.filter ( .done >> ( (==) True) )
-
-            doneTasksCount = List.length doneTasks
-
-            groupedByDates = extractTasksGroupedByMonthDay doneTasks
-        in
-            if (doneTasksCount == 0) then
-                p [ class "gtd__doneTasksView__noTasks" ][
-                    text "Nothing done yet!"
-                ] 
-            else
-                div [class "gtd__doneTasksView__tasks"]
-                    (groupedByDates 
-                        |> List.map (\(date, tasks) -> (doneTasksDateBoxView address date tasks ) ) )
-    ]

@@ -1,5 +1,6 @@
 @import "Components/Pomodoro/Pomodoro.scss";
 @import "Components/GTD/GTD.scss";
+@import "Components/DoneView/DoneView.scss";
 @import "Common/common.scss";
 
 ::-moz-selection { background-color: $color_main; color: #fff; }
@@ -130,7 +131,7 @@ $screen_width: 400px;
         }
     }
 
-    .main__todoView, .main__doneView{
+    .main__todoView, .doneView{
         display: block;
         width: 320px;
         margin: auto;

@@ -9,6 +9,7 @@ import Common.EventUtils exposing (onClickWithPreventDefault)
 
 import Components.Pomodoro.Pomodoro as Pomodoro
 import Components.GTD.GTD as GTD
+import Components.DoneView.DoneView as DoneView
 
 
 -- MODEL
@@ -89,6 +90,7 @@ type IncomingAction = NoOpIncoming
                      |RequestChangeScreen Screen
                      |PomodoroIncomingAction Pomodoro.OutgoingAction
                      |GTDIncomingAction GTD.OutgoingAction
+                     |DoneViewIncomingAction DoneView.OutgoingAction
 
 update: (Time.Time, IncomingAction) -> PomoGTDModel -> PomoGTDModel 
 update (now, action) model = 
@@ -163,6 +165,9 @@ update (now, action) model =
                                       (GTD.update GTD.EnableNewTaskAppending) <| model.gtdModel)
                     }
 
+        (DoneViewIncomingAction (DoneView.GTDOutgoingAction gtdAction)) ->
+                    update (now, GTDIncomingAction gtdAction) model
+            
 
 
 -- VIEW
@@ -175,14 +180,6 @@ todoView address model =
         div [ class "gtd" ][
             GTD.newTaskView (Signal.forwardTo address GTDIncomingAction ) model.gtdModel,
             GTD.tasksPoolView (Signal.forwardTo address GTDIncomingAction ) model.gtdModel
-        ]
-    ]
-
-doneView : Signal.Address IncomingAction -> PomoGTDModel -> Html.Html
-doneView address model = 
-    div [ class "main__doneView" ][
-        div [ class "gtd" ][
-            GTD.doneTasksView (Signal.forwardTo address GTDIncomingAction ) model.gtdModel
         ]
     ]
 
@@ -236,7 +233,7 @@ view address model =
                 div [ 
                     class "main__done"
                 ][
-                    doneView address model
+                    DoneView.doneView (Signal.forwardTo address DoneViewIncomingAction) model.pomodoroModel model.gtdModel 
                 ]
             ]
         ]
