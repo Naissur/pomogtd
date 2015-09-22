@@ -233,7 +233,7 @@ view address model =
                 div [ 
                     class "main__done"
                 ][
-                    DoneView.doneView (Signal.forwardTo address DoneViewIncomingAction) model.pomodoroModel model.gtdModel 
+                    DoneView.doneView (Signal.forwardTo address DoneViewIncomingAction) model.pomodoroModel.log model.gtdModel 
                 ]
             ]
         ]

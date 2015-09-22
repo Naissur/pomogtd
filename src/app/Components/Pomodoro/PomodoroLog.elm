@@ -1,7 +1,12 @@
 module Components.Pomodoro.PomodoroLog where
 
+import Date exposing (Date, toTime, fromTime)
+import List exposing(length, append)
+import Maybe exposing (withDefault, map)
 import Time exposing (..)
 
+import Common.EventUtils exposing (onChange, onInput, onSubmitPreventDefault)
+import Common.TimeUtils exposing (extractDatesUniqueToMonthDay,  haveSameDayAndMonth, getMonthDayString)
 
 -- MODEL
 
@@ -19,6 +24,21 @@ initialLog : Log
 initialLog = {
                 pomodoros = []
             }
+
+
+
+getPomodorosNearDate : List PomodoroLog -> Date -> List PomodoroLog
+getPomodorosNearDate log date = 
+                           log 
+                           |> List.filter ( (haveSameDayAndMonth date) << fromTime << .timeStarted ) 
+
+extractLogStampsGroupedByMonthDay : List PomodoroLog -> List (Date, (List PomodoroLog) )
+extractLogStampsGroupedByMonthDay log = 
+                    let
+                        dates = extractDatesUniqueToMonthDay << List.map (fromTime << .timeStarted) <| log
+                    in
+                        List.map ( \date -> (date, getPomodorosNearDate log date)) dates
+                        
 
 
 
